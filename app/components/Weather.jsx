@@ -2,6 +2,7 @@ var React = require('react');
 var WeatherForm = require('WeatherForm');
 var WeatherMessage = require('WeatherMessage');
 var getWeatherMap = require('getWeatherMap');
+var ErrroModal = require('ErrorModal');
 
 var Weather = React.createClass({
   getInitialState: function () {
@@ -10,11 +11,32 @@ var Weather = React.createClass({
     };
   },
 
+  componentDidMount: function () {
+    var location = this.props.location.query.location;
+
+    if (location && location.length > 0) {
+      this.handleSearch(location);
+      window.location.hash = '#/';
+    }
+  },
+
+  componentWillRecieveProps: function (newprops) {
+    var location = newprops.location.query.location;
+
+    if (location && location.length > 0) {
+      this.handleSearch(location);
+      window.location.hash = '#/';
+    }
+  },
+
   handleSearch: function (location) {
     var self = this;
 
     this.setState ({
-        isLoading: true
+        isLoading: true,
+        errorMessage: undefined,
+        location: undefined,
+        temp: undefined
     });
     debugger
 
@@ -27,28 +49,34 @@ var Weather = React.createClass({
 
     }, function (error) {
       self.setState ({
-          isLoading: false
+          isLoading: false,
+          errorMessage: error.message
       });
-
-      alert(error);
     });
   },
 
   render: function () {
-    var {location, temp, isLoading} = this.state;
+    var {location, temp, isLoading, errorMessage} = this.state;
     var renderMessage = function () {
       if (isLoading) {
-        return <h3>Fetching Weather....</h3>;
+        return <h3 className= "text-center">Fetching Weather....</h3>;
       } else if (temp && location) {
         return <WeatherMessage location={location} temp= {temp}/>;
       }
     }
 
+    var renderErrorModal = function () {
+      if (typeof errorMessage === 'string') {
+        return (<ErrroModal message = {errorMessage}/>);
+      }
+    }
+
     return (
       <div>
-        <h2>Weather Component</h2>
+        <h2 className = "text-center page-title">Get Weather</h2>
         <WeatherForm onSearch = {this.handleSearch}/>
         {renderMessage()}
+        {renderErrorModal()}
       </div>
     );
   }
